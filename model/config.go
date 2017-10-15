@@ -248,6 +248,7 @@ type SqlSettings struct {
 	Trace                    bool
 	AtRestEncryptKey         string
 	QueryTimeout             *int
+	SearchPostLimit          *int
 }
 
 type LogSettings struct {
@@ -624,6 +625,11 @@ func (o *Config) SetDefaults() {
 
 	if o.SqlSettings.QueryTimeout == nil {
 		o.SqlSettings.QueryTimeout = NewInt(30)
+	}
+
+	if o.SqlSettings.SearchPostLimit == nil {
+		o.SqlSettings.SearchPostLimit = new(int)
+		*o.SqlSettings.SearchPostLimit = 100
 	}
 
 	if o.FileSettings.DriverName == nil {
