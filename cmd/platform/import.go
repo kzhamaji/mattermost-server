@@ -32,6 +32,14 @@ var bulkImportCmd = &cobra.Command{
 	RunE:    bulkImportCmdF,
 }
 
+var hipchatImportCmd = &cobra.Command{
+	Use:     "hipchat [team] [room.json] [room]",
+	Short:   "Import hipchat data.",
+	Long:    "Import data from a Hipchat Bulk Import File.",
+	Example: "  import hipchat room.json",
+	RunE:    hipchatImportCmdF,
+}
+
 func init() {
 	bulkImportCmd.Flags().Bool("apply", false, "Save the import data to the database. Use with caution - this cannot be reverted.")
 	bulkImportCmd.Flags().Bool("validate", false, "Validate the import data without making any changes to the system.")
@@ -40,6 +48,7 @@ func init() {
 	importCmd.AddCommand(
 		bulkImportCmd,
 		slackImportCmd,
+		hipchatImportCmd,
 	)
 }
 
@@ -134,6 +143,33 @@ func bulkImportCmdF(cmd *cobra.Command, args []string) error {
 			CommandPrettyPrintln("Validation complete. You can now perform the import by rerunning this command with the --apply flag.")
 		}
 	}
+
+	return nil
+}
+
+func hipchatImportCmdF(cmd *cobra.Command, args []string) error {
+	a, err := initDBCommandContextCobra(cmd)
+	if err != nil {
+		return err
+	}
+
+	if len(args) != 3 {
+		return errors.New("Incorrect number of arguments.")
+	}
+
+	team := getTeamFromTeamArg(a, args[0])
+	if team == nil {
+		return errors.New("Unable to find team '" + args[0] + "'")
+	}
+
+	fileName := args[1]
+	room := args[2]
+
+	CommandPrettyPrintln("Running Hipchat Import. This may take a long time for large teams or teams with many messages.")
+
+	a.HipchatImport(fileName, team.Id, room)
+
+	CommandPrettyPrintln("Finished Hipchat Import.")
 
 	return nil
 }
